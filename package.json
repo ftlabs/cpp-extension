@@ -1,0 +1,38 @@
+{
+  "name": "perf-widget",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ftlabs/perf-widget.git"
+  },
+  "author": "FT Labs",
+  "private": true,
+  "license": "",
+  "description": "Perf Widget front-end and back-end",
+  "engines": {
+    "node": "5.6.0"
+  },
+  "dependencies": {
+    "bower": "^1.7.7",
+    "gulp": "^3.9.0",
+    "gulp-env": "^0.4.0",
+    "gulp-insert": "^0.5.0",
+    "gulp-preprocess": "^2.0.0",
+    "gulp-uglify": "^1.5.1",
+    "gulp-util": "^3.0.7",
+    "npm-run-all": "^1.4.0",
+    "origami-build-tools": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
+  },
+  "scripts": {
+    "bower": "bower install",
+    "build": "gulp build-extension",
+    "clean": "rimraf extension-dist/",
+    "develop": "npm run watch -- --exec 'npm-run-all -p build'",
+    "lint": "obt verify",
+    "postinstall": "npm run build",
+    "watch": "nodemon --ignore extension-dist --ignore coverage -e js,scss,json"
+  }
+}

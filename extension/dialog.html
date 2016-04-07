@@ -1,0 +1,38 @@
+<html>
+<head>
+	<link rel="stylesheet" href="https://build.origami.ft.com/v2/bundles/css?modules=o-forms@^2.0.0,o-buttons@^3.0.3" />
+	<style>
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html{
+			background-color: #FFF1E0;
+		}
+
+		body{
+			min-width: 200px;
+			font-size: 16px;
+			margin-bottom: 0;
+			margin-top: 1em;
+		}
+
+	</style>
+</head>
+<body>
+
+	<div class="o-forms-group">
+		<form>
+			<div class="o-forms-group">
+				<input class="o-forms-checkbox" name="enabled" type="checkbox" id="enabled" value="true" checked></input>
+				<label class="o-forms-label" for="enabled">Enabled Globally</label>
+			</div>
+			<div class="o-forms-group">
+				<button class="o-buttons" name="showwidget" id="showwidget">Show Widget</button>
+			</div>
+		</form>
+	</div>
+	<script src="scripts/popup.js"></script>
+</body>
+</html>
