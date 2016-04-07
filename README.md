@@ -2,6 +2,11 @@
 
 Extension to notify performance issues according to an all rules on CPP.
 
+## Reading
+
+http://wicg.github.io/ContentPerformancePolicy/#directives
+https://timkadlec.com/2016/02/a-standardized-alternative-to-amp/
+
 ### Development
 
 #### Prerequisites
