@@ -13,8 +13,8 @@ https://timkadlec.com/2016/02/a-standardized-alternative-to-amp/
 - [NodeJS](https://nodejs.org/en/) -- The runtime the application requires
 
 #### Setting up development environment
-- Clone the repository -- `git clone git@github.com:ftlabs/perf-widget.git`
-- Change in repository directory -- `cd perf-widget`
+- Clone the repository -- `git clone git@github.com:ftlabs/cpp-extension.git`
+- Change in repository directory -- `cd cpp-extension`
 - Install the dependencies -- `npm install`
 - Build the files used by the web client -- `npm run build`
 - Spin up the web server -- `npm start`
