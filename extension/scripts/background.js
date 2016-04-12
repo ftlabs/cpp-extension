@@ -23,6 +23,11 @@ function emitMessage (method, data, url){
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
+	if (request.method === 'hasLoaded') {
+
+		// message devtools tab loaded
+	}
+
 	if (request.method === 'isEnabled') {
 		sendResponse({
 			enabled: enabled
@@ -32,6 +37,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.method === 'setEnabled') {
 		enabled = request.enabled;
 		localStorage.setItem('enabled', String(request.enabled));
+	}
+
+	if (request.method === 'resultsReady') {
+		emitMessage('resultsReady', request.results);
 	}
 
 	if (request.method === 'trackUiInteraction') {
