@@ -2,6 +2,7 @@
 /*global chrome, localStorage*/
 
 let enabled;
+const devtools = new Set();
 
 if (localStorage.getItem('enabled') === null) {
 	enabled = true;
@@ -21,11 +22,34 @@ function emitMessage (method, data, url){
 	});
 }
 
+function emitMessageToDevtools (method, data) {
+
+	// devtools connection can't send :( need to find a way!
+	devtools.forEach(function (devtoolConnection) {
+		devtoolConnection.sendMessage({
+			method: method,
+			data: data
+		});
+	})
+}
+
+function devToolsListener (message) { //sender, sendResponse
+	if (message.method === 'customLog') {
+		console.log(message.log);
+	}
+}
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 	if (request.method === 'hasLoaded') {
+		emitMessageToDevtools('hasLoaded', {});
+	}
 
-		// message devtools tab loaded
+	if (request.method === 'reloadMe') {
+		const tabid = sender.tab.id;
+		emitMessageToDevtools('reload', {
+			tab: tabid
+		});
 	}
 
 	if (request.method === 'isEnabled') {
@@ -74,4 +98,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			});
 		});
 	}
+});
+
+
+chrome.runtime.onConnect.addListener(function (devToolsConnection) {
+    devToolsConnection.onMessage.addListener(devToolsListener);
+	devtools.add(devToolsConnection);
+
+    devToolsConnection.onDisconnect.addListener(function () {
+		devToolsConnection.onMessage.removeListener(devToolsListener);
+		devtools.delete(devToolsConnection);
+    });
 });

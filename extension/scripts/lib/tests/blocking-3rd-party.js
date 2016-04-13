@@ -1,10 +1,6 @@
 /* global chrome, debug */
 'use strict';
 
-const backgroundPageConnection = chrome.runtime.connect({
-    name: 'devtools-page'
-});
-
 module.exports = function blocking3rdParty () {
 	const urls = [];
 	return new Promise(function (resolve) {
@@ -14,9 +10,9 @@ module.exports = function blocking3rdParty () {
 				headersSize: request.headersSize,
 				bodySize: request.bodySize
 			});
-			debug(request.url);
+			debug(JSON.stringify(request, null, '  '));
 		});
-		backgroundPageConnection.onMessage.addListener(function (message) {
+		window.backgroundPageConnection.onMessage.addListener(function (message) {
 			if (message.method === 'pageLoad') {
 				resolve();
 			}

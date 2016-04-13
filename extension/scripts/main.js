@@ -45,7 +45,7 @@ function makeTrackingRequest (details, identity) {
 	});
 }
 
-function loadWidget(text) {
+function loadWidget (results) {
 
 	// add the widget stylesheet
 	require('./lib/widgetstyle');
@@ -72,7 +72,18 @@ function loadWidget(text) {
 	holder.setAttribute('id', 'cpp-widget-holder');
 	document.body.appendChild(holder);
 
-	textTarget.innerHTML = text;
+	if (results) {
+		textTarget.innerHTML = results;
+	} else {
+		const refresh = document.createElement('button');
+		refresh.textContent = 'Begin tests (Reloads page)';
+		refresh.addEventListener('click', function refresh () {
+			chrome.runtime.sendMessage({
+				method: 'reloadMe'
+			});
+		});
+		textTarget.appendChild(refresh);
+	}
 
 	return {
 		close: removeSelf,
@@ -99,12 +110,20 @@ chrome.runtime.onMessage.addListener(function (request) {
 			method: 'isEnabled',
 			host: location.host
 		}, response => {
+			if (widget) widget.close();
 			if (response.enabled) widget = loadWidget(results);
 		});
 	}
 });
 
-window.addEventListener('load', function loaded() {
+chrome.runtime.sendMessage({
+	method: 'isEnabled',
+	host: location.host
+}, response => {
+	if (response.enabled) widget = loadWidget();
+});
+
+window.addEventListener('load', function loaded () {
 	chrome.runtime.sendMessage({
 		method: 'hasLoaded'
 	});
