@@ -2,7 +2,8 @@
 /*global chrome, localStorage*/
 
 let enabled;
-const devtools = new Set();
+const loadCallbacks = new Map();
+const refreshTabCallbacks = new Map();
 
 if (localStorage.getItem('enabled') === null) {
 	enabled = true;
@@ -22,91 +23,119 @@ function emitMessage (method, data, url){
 	});
 }
 
-function emitMessageToDevtools (method, data) {
+function devToolsListener (message) {
 
-	// devtools connection can't send :( need to find a way!
-	devtools.forEach(function (devtoolConnection) {
-		devtoolConnection.sendMessage({
-			method: method,
-			data: data
-		});
-	})
-}
-
-function devToolsListener (message) { //sender, sendResponse
 	if (message.method === 'customLog') {
 		console.log(message.log);
 	}
+	return true;
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
-	if (request.method === 'hasLoaded') {
-		emitMessageToDevtools('hasLoaded', {});
-	}
+	if (sender.tab) {
 
-	if (request.method === 'reloadMe') {
-		const tabid = sender.tab.id;
-		emitMessageToDevtools('reload', {
-			tab: tabid
-		});
-	}
+		// If it is from a tab
+		const tabId = sender.tab.id;
 
-	if (request.method === 'isEnabled') {
-		sendResponse({
-			enabled: enabled
-		});
-	}
+		if (request.method === 'hasLoaded') {
+			if (loadCallbacks.has(tabId)) {
+				loadCallbacks.get(tabId)({
+					method: 'pageLoad'
+				});
+				loadCallbacks.delete(tabId);
+			}
+			return;
+		}
 
-	if (request.method === 'setEnabled') {
-		enabled = request.enabled;
-		localStorage.setItem('enabled', String(request.enabled));
-	}
+		if (request.method === 'reloadMe') {
+			if (refreshTabCallbacks.has(tabId)) {
+				refreshTabCallbacks.get(tabId)({
+					method: 'reload'
+				});
+				refreshTabCallbacks.delete(tabId);
+			}
+			return;
+		}
 
-	if (request.method === 'resultsReady') {
-		emitMessage('resultsReady', request.results);
-	}
+		if (request.method === 'isEnabled') {
+			sendResponse({
+				enabled: enabled
+			});
+			return;
+		}
 
-	if (request.method === 'trackUiInteraction') {
-		new Promise(
-			resolve => chrome.identity.getProfileUserInfo(resolve)
-		).then(identity => {
+		if (request.method === 'setEnabled') {
+			enabled = request.enabled;
+			localStorage.setItem('enabled', String(request.enabled));
+			return;
+		}
+
+		if (request.method === 'resultsReady') {
+			emitMessage('resultsReady', request.results);
+			return;
+		}
+
+		if (request.method === 'trackUiInteraction') {
+			new Promise(
+				resolve => chrome.identity.getProfileUserInfo(resolve)
+			).then(identity => {
+				chrome.tabs.query({
+					active: true,
+					lastFocusedWindow: true
+				}, function (tabs){
+					tabs.forEach(function (tab) {
+						chrome.tabs.sendMessage(tab.id, {
+							method: 'makeTrackingRequest',
+							data: {
+								identity: identity,
+								details: request.details
+							}
+						});
+					});
+				});
+			});
+			return true;
+		}
+
+		if (request.method === 'showWidget') {
 			chrome.tabs.query({
 				active: true,
 				lastFocusedWindow: true
 			}, function (tabs){
 				tabs.forEach(function (tab) {
-					chrome.tabs.sendMessage(tab.id, {
-						method: 'makeTrackingRequest',
-						data: {
-							identity: identity,
-							details: request.details
-						}
-					});
+					chrome.tabs.sendMessage(tab.id, {method: 'showWidget'});
 				});
 			});
-		});
+			return true;
+		}
+	} else {
+
+		sendResponse('Hello World');
+
+		// It is from devtools
+		if (request.method === 'waitForTabLoad') {
+			loadCallbacks.set(request.tabid, sendResponse);
+		}
+
+		if (request.method === 'waitForReloadInteraction') {
+			refreshTabCallbacks.set(request.tabid, sendResponse);
+			sendResponse({method: 'reload'});
+		}
+
+		if (request.method === 'devToolsRequestShowWidget') {
+			chrome.tabs.sendMessage(request.tabid, {method: 'showWidget'});
+		}
 	}
 
-	if (request.method === 'showWidget') {
-		chrome.tabs.query({
-			active: true,
-			lastFocusedWindow: true
-		}, function (tabs){
-			tabs.forEach(function (tab) {
-				chrome.tabs.sendMessage(tab.id, {method: 'showWidget'});
-			});
-		});
-	}
+	return true;
 });
 
 
 chrome.runtime.onConnect.addListener(function (devToolsConnection) {
     devToolsConnection.onMessage.addListener(devToolsListener);
-	devtools.add(devToolsConnection);
 
     devToolsConnection.onDisconnect.addListener(function () {
 		devToolsConnection.onMessage.removeListener(devToolsListener);
-		devtools.delete(devToolsConnection);
     });
 });

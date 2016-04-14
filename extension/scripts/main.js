@@ -94,7 +94,7 @@ let widget;
 let text;
 chrome.runtime.onMessage.addListener(function (request) {
 
-	if (request.method === 'showWidget' && !widget && text) {
+	if (request.method === 'showWidget' && !widget) {
 		widget = loadWidget(text);
 	}
 
@@ -114,13 +114,6 @@ chrome.runtime.onMessage.addListener(function (request) {
 			if (response.enabled) widget = loadWidget(results);
 		});
 	}
-});
-
-chrome.runtime.sendMessage({
-	method: 'isEnabled',
-	host: location.host
-}, response => {
-	if (response.enabled) widget = loadWidget();
 });
 
 window.addEventListener('load', function loaded () {
