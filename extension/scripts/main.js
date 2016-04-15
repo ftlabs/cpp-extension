@@ -32,7 +32,6 @@ function makeTrackingRequest (details, identity) {
 	trackingReq.id = identity.id;
 	trackingReq.email = identity.email;
 
-	// may not work without a DOM, may have to redirect to active tab.
 	oTracking.init({
 		server: 'https://spoor-api.ft.com/px.gif',
 		context: {

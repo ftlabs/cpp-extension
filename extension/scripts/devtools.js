@@ -20,12 +20,9 @@ window.backgroundPageConnection = chrome.runtime.connect({
     name: 'devtools-page-' + Date.now()
 });
 
-window.debug = debug;
-window.backgroundLog = backgroundLog;
-window.onerror = debug;
+window.backgroundPageConnection.onMessage.addListener(function (message) {
+	debug('Message from background tab to devtools: ' + JSON.stringify(message));
 
-chrome.runtime.onMessage.addListener(function (message) {
-	debug(message);
 	if (message.method === 'reload') {
 		try {
 			debug('Reloading Page');
@@ -44,13 +41,22 @@ chrome.runtime.onMessage.addListener(function (message) {
 	}
 });
 
+window.debug = debug;
+window.backgroundLog = backgroundLog;
+window.onerror = function (e) {
+	debug({
+		message: e.message,
+		stack: e.stack
+	});
+}
+
 setImmediate(function () {
-	chrome.runtime.sendMessage({
+	window.backgroundPageConnection.postMessage({
 		method: 'devToolsRequestShowWidget',
 		tabid: chrome.devtools.inspectedWindow.tabId
 	});
 
-	chrome.runtime.sendMessage({
+	window.backgroundPageConnection.postMessage({
 		method: 'waitForReloadInteraction',
 		tabid: chrome.devtools.inspectedWindow.tabId
 	});

@@ -23,14 +23,6 @@ function emitMessage (method, data, url){
 	});
 }
 
-function devToolsListener (message) {
-
-	if (message.method === 'customLog') {
-		console.log(message.log);
-	}
-	return true;
-}
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 	if (sender.tab) {
@@ -40,7 +32,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 		if (request.method === 'hasLoaded') {
 			if (loadCallbacks.has(tabId)) {
-				loadCallbacks.get(tabId)({
+				loadCallbacks.get(tabId).postMessage({
 					method: 'pageLoad'
 				});
 				loadCallbacks.delete(tabId);
@@ -50,7 +42,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 		if (request.method === 'reloadMe') {
 			if (refreshTabCallbacks.has(tabId)) {
-				refreshTabCallbacks.get(tabId)({
+				refreshTabCallbacks.get(tabId).postMessage({
 					method: 'reload'
 				});
 				refreshTabCallbacks.delete(tabId);
@@ -109,31 +101,41 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			});
 			return true;
 		}
-	} else {
-
-		sendResponse('Hello World');
-
-		// It is from devtools
-		if (request.method === 'waitForTabLoad') {
-			loadCallbacks.set(request.tabid, sendResponse);
-		}
-
-		if (request.method === 'waitForReloadInteraction') {
-			refreshTabCallbacks.set(request.tabid, sendResponse);
-			sendResponse({method: 'reload'});
-		}
-
-		if (request.method === 'devToolsRequestShowWidget') {
-			chrome.tabs.sendMessage(request.tabid, {method: 'showWidget'});
-		}
 	}
 
 	return true;
 });
 
+function devToolsListener (message, sender, sendResponse) {
+
+	if (message.method === 'customLog') {
+		console.log(message.log);
+	}
+	if (message.method === 'echo') {
+		sender.postMessage(message);
+	}
+
+	// It is from devtools
+	if (message.method === 'waitForTabLoad') {
+		loadCallbacks.set(message.tabid, sender);
+	}
+
+	if (message.method === 'waitForReloadInteraction') {
+		refreshTabCallbacks.set(message.tabid, sender);
+	}
+
+	if (message.method === 'devToolsRequestShowWidget') {
+		chrome.tabs.sendMessage(message.tabid, {method: 'showWidget'});
+	}
+	return true;
+}
+
 
 chrome.runtime.onConnect.addListener(function (devToolsConnection) {
     devToolsConnection.onMessage.addListener(devToolsListener);
+	devToolsConnection.postMessage({
+		method: 'connectionConfirmation'
+	});
 
     devToolsConnection.onDisconnect.addListener(function () {
 		devToolsConnection.onMessage.removeListener(devToolsListener);
