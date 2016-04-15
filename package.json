@@ -1,9 +1,9 @@
 {
-  "name": "perf-widget",
+  "name": "cpp-extension",
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ftlabs/perf-widget.git"
+    "url": "https://github.com/ftlabs/cpp-extension.git"
   },
   "author": "FT Labs",
   "private": true,
@@ -24,7 +24,8 @@
     "origami-build-tools": "^5.1.0"
   },
   "devDependencies": {
-    "nodemon": "^1.8.1"
+    "nodemon": "^1.8.1",
+    "rimraf": "^2.5.2"
   },
   "scripts": {
     "bower": "bower install",
@@ -32,7 +33,7 @@
     "clean": "rimraf extension-dist/",
     "develop": "npm run watch -- --exec 'npm-run-all -p build'",
     "lint": "obt verify",
-    "postinstall": "npm run build",
+    "postinstall": "npm run bower && npm run build",
     "watch": "nodemon --ignore extension-dist --ignore coverage -e js,scss,json"
   }
 }
