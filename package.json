@@ -33,7 +33,7 @@
     "clean": "rimraf extension-dist/",
     "develop": "npm run watch -- --exec 'npm-run-all -p build'",
     "lint": "obt verify",
-    "postinstall": "npm run build",
+    "postinstall": "npm run bower && npm run build",
     "watch": "nodemon --ignore extension-dist --ignore coverage -e js,scss,json"
   }
 }
