@@ -17,8 +17,10 @@
     "default_icon": "./icon.png",
     "default_popup": "dialog.html"
   },
+  "devtools_page": "devtools.html",
   "content_scripts": [
     {
+	  "run_at": "document_start",
       "matches": ["<all_urls>"],
       "js": ["scripts/main.js"]
     }

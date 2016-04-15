@@ -32,7 +32,6 @@ function makeTrackingRequest (details, identity) {
 	trackingReq.id = identity.id;
 	trackingReq.email = identity.email;
 
-	// may not work without a DOM, may have to redirect to active tab.
 	oTracking.init({
 		server: 'https://spoor-api.ft.com/px.gif',
 		context: {
@@ -45,7 +44,7 @@ function makeTrackingRequest (details, identity) {
 	});
 }
 
-function loadWidget () {
+function loadWidget (results) {
 
 	// add the widget stylesheet
 	require('./lib/widgetstyle');
@@ -69,30 +68,55 @@ function loadWidget () {
 	close.dataset.trackingAction = 'close';
 	close.addEventListener('click', removeSelf, false);
 
-
 	holder.setAttribute('id', 'cpp-widget-holder');
 	document.body.appendChild(holder);
+
+	if (results) {
+		textTarget.innerHTML = results;
+	} else {
+		const refresh = document.createElement('button');
+		refresh.textContent = 'Begin tests (Reloads page)';
+		refresh.addEventListener('click', function refresh () {
+			chrome.runtime.sendMessage({
+				method: 'reloadMe'
+			});
+		});
+		textTarget.appendChild(refresh);
+	}
 
 	return {
 		close: removeSelf,
 	}
 }
 
-chrome.runtime.sendMessage({
-	method: 'isEnabled',
-	host: location.host
-}, response => {
-	if (response.enabled) loadWidget();
-});
-
 let widget;
+let text;
 chrome.runtime.onMessage.addListener(function (request) {
 
 	if (request.method === 'showWidget' && !widget) {
-		widget = loadWidget();
+		widget = loadWidget(text);
 	}
 
 	if (request.method === 'makeTrackingRequest') {
 		makeTrackingRequest(request.data.details, request.data.identity);
 	}
+
+	if (request.method === 'resultsReady') {
+
+		const results = request.data;
+
+		chrome.runtime.sendMessage({
+			method: 'isEnabled',
+			host: location.host
+		}, response => {
+			if (widget) widget.close();
+			if (response.enabled) widget = loadWidget(results);
+		});
+	}
+});
+
+window.addEventListener('load', function loaded () {
+	chrome.runtime.sendMessage({
+		method: 'hasLoaded'
+	});
 });
