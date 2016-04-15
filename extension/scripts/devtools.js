@@ -23,6 +23,16 @@ window.backgroundPageConnection = chrome.runtime.connect({
 window.backgroundPageConnection.onMessage.addListener(function (message) {
 	debug('Message from background tab to devtools: ' + JSON.stringify(message));
 
+	if (message.method === 'pageLoad') {
+
+		// Trigger the client page to start it's testing
+		window.backgroundPageConnection.postMessage({
+			method: 'startTests',
+			tabid: chrome.devtools.inspectedWindow.tabId
+		});
+	}
+
+	// Page was reloaded start the devtools tests
 	if (message.method === 'reload') {
 		try {
 			debug('Reloading Page');

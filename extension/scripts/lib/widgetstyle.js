@@ -140,6 +140,11 @@ style.textContent = `
 		margin-top: 1em;
 	}
 
+	#cpp-widget-holder li {
+		display: list-item;
+		margin-left: 2em;
+	}
+
 `;
 
 document.head.appendChild(style);
