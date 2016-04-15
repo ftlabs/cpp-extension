@@ -51,6 +51,9 @@ window.onerror = function (e) {
 }
 
 setImmediate(function () {
+
+	if (!chrome.devtools.inspectedWindow.tabId) return;
+
 	window.backgroundPageConnection.postMessage({
 		method: 'devToolsRequestShowWidget',
 		tabid: chrome.devtools.inspectedWindow.tabId

@@ -35,6 +35,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				loadCallbacks.get(tabId).postMessage({
 					method: 'pageLoad'
 				});
+				sendResponse({method: 'showWidget'});
 				loadCallbacks.delete(tabId);
 			}
 			return;
@@ -106,11 +107,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	return true;
 });
 
-function devToolsListener (message, sender, sendResponse) {
+function devToolsListener (message, sender) {
 
 	if (message.method === 'customLog') {
 		console.log(message.log);
 	}
+
 	if (message.method === 'echo') {
 		sender.postMessage(message);
 	}
