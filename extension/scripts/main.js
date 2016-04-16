@@ -107,7 +107,7 @@ function loadWidget (promptRefresh) {
 
 	update();
 
-	return {
+	widget = {
 		close: removeSelf,
 		update
 	}
@@ -120,8 +120,9 @@ function beginTests() {
 let widget;
 chrome.runtime.onMessage.addListener(function (request) {
 
-	if (request.method === 'showWidget' && !widget) {
-		widget = loadWidget(request.promptRefresh);
+	if (request.method === 'showWidget') {
+		if (request.promptRefresh && widget) widget.close();
+		if (!widget) loadWidget(request.promptRefresh);
 	}
 
 	if (request.method === 'makeTrackingRequest') {
@@ -129,7 +130,7 @@ chrome.runtime.onMessage.addListener(function (request) {
 	}
 
 	if (request.method === 'startTests') {
-		if (!widget) widget = loadWidget();
+		if (!widget) loadWidget();
 		beginTests();
 	}
 
@@ -139,7 +140,7 @@ chrome.runtime.onMessage.addListener(function (request) {
 			method: 'isEnabled',
 			host: location.host
 		}, response => {
-			if (!widget && response.enabled) widget = loadWidget();
+			if (!widget && response.enabled) loadWidget();
 			Object.keys(request.data).forEach(key => {
 				results[key] === request.data[key];
 			});
