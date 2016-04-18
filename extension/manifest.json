@@ -3,7 +3,7 @@
 
   "name": "FTLabs Cpp Widget",
   "description": "A Chrome Extension that automagically adds a cpp analysis widget.",
-  "version": "2.3.0",
+  "version": "1.0.0",
   "permissions": [
     "tabs",
     "activeTab",

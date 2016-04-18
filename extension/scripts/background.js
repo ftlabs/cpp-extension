@@ -117,6 +117,12 @@ function devToolsListener (message, sender) {
 		sender.postMessage(message);
 	}
 
+	if (message.method === 'startTests') {
+		chrome.tabs.sendMessage(message.tabid, {
+			method: 'startTests'
+		});
+	}
+
 	// It is from devtools
 	if (message.method === 'waitForTabLoad') {
 		loadCallbacks.set(message.tabid, sender);
@@ -127,7 +133,10 @@ function devToolsListener (message, sender) {
 	}
 
 	if (message.method === 'devToolsRequestShowWidget') {
-		chrome.tabs.sendMessage(message.tabid, {method: 'showWidget'});
+		chrome.tabs.sendMessage(message.tabid, {
+			method: 'showWidget',
+			promptRefresh: true
+		});
 	}
 	return true;
 }
