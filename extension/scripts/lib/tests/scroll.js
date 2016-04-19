@@ -1,3 +1,5 @@
+// This test runs on the client side.
+
 module.exports = function (){
 	
 	let thingsThatListenToScrollEvent = 0;
