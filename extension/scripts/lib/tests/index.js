@@ -2,7 +2,8 @@
 /* globals debug, chrome */
 
 const tests = {
-	thirdParty: require('./blocking-3rd-party')
+	thirdParty: require('./blocking-3rd-party'),
+	scrolling : require('./scroll')
 };
 
 function reportTestToWidget (name, result) {
