@@ -2,16 +2,20 @@
 /* global chrome */
 
 const runTests = require('./lib/tests');
-const debug = a => {
+function debug (a, noTrace) {
 	let stack;
-	if (a.constructor === Error) {
-		stack = a.stack.toString();
-	} else {
+	if (a && a.constructor === Error) {
+		stack = a.stack;
+	} else if (noTrace !== true) {
 		stack = Error('Stack').stack.toString().split('\n').map(s => s.trim()).slice(3,6).join('\n');
 	}
-	chrome.devtools.inspectedWindow.eval(
-		'console.log(`%c CPP Extension: ' + (typeof a === 'string' ? a : JSON.stringify(a)) + '`, "font-weight:bold;"); console.log(`%c ' + stack + '`, "color:grey;");'
-	, {
+
+	let command = 'console.log(`%c CPP Extension: ' + (typeof a === 'string' ? a : JSON.stringify(a)) + '`, "font-weight:bold;");';
+	if (noTrace !== true) {
+		 command = command + 'console.log(`%c ' + stack + '`, "color:grey;")';
+	}
+
+	chrome.devtools.inspectedWindow.eval(command, {
 		useContentScriptContext: true
 	});
 };
@@ -27,7 +31,7 @@ window.backgroundPageConnection = chrome.runtime.connect({
 });
 
 window.backgroundPageConnection.onMessage.addListener(function (message) {
-	debug('Message from background tab to devtools: ' + JSON.stringify(message));
+	debug('Message from background tab to devtools: ' + JSON.stringify(message), true);
 
 	if (message.method === 'pageLoad') {
 
@@ -40,30 +44,26 @@ window.backgroundPageConnection.onMessage.addListener(function (message) {
 
 	// Page was reloaded start the devtools tests
 	if (message.method === 'reload') {
-		try {
-			debug('Reloading Page');
-			chrome.devtools.inspectedWindow.reload();
-			runTests()
-			.then(results => {
-				debug(results);
-				chrome.runtime.sendMessage({
-					method: 'resultsReady',
-					results: results
-				});
-			}, e => debug(e));
-		} catch (e) {
-			debug(e);
-		}
+
+		window.connectedPageUrl = message.url;
+		debug('Reloading Page');
+		chrome.devtools.inspectedWindow.reload();
+		runTests()
+		.then(results => {
+			debug(results);
+			chrome.runtime.sendMessage({
+				method: 'resultsReady',
+				results: results
+			});
+		})
+		.catch(e => debug(e));
 	}
 });
 
 window.debug = debug;
 window.backgroundLog = backgroundLog;
-window.onerror = function (e) {
-	debug({
-		message: e.message,
-		stack: e.stack
-	});
+window.onerror = function (...e) {
+	debug(e.join(' '));
 }
 
 setImmediate(function () {
@@ -79,5 +79,6 @@ setImmediate(function () {
 		method: 'waitForReloadInteraction',
 		tabid: chrome.devtools.inspectedWindow.tabId
 	});
-	debug('Press reload in the widget to begin.');
+
+	debug('Press reload in the widget to begin.', true);
 });

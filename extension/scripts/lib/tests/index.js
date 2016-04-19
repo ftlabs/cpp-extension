@@ -7,11 +7,13 @@ const tests = [
 
 module.exports = function runTests () {
 	return Promise.all(
-		tests.map(test => test())
-		.then(() => true)
-		.catch(e => {
-			debug(e);
-			return false;
-		})
+		tests.map(
+			test => test()
+			.then(() => true)
+			.catch(e => {
+				debug(e);
+				return false;
+			})
+		)
 	);
 };

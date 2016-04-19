@@ -10,7 +10,7 @@
  * NOTE: This does not track items received via the cache API aka, from a service worker.
  */
 module.exports = function blocking3rdParty () {
-	return new Promise(function (resolve) {
+	return new Promise(function (resolve, reject) {
 		const urls = [];
 
 		window.backgroundPageConnection.postMessage({
@@ -18,19 +18,26 @@ module.exports = function blocking3rdParty () {
 			tabid: chrome.devtools.inspectedWindow.tabId
 		});
 
-		chrome.devtools.network.onRequestFinished.addListener(function (request) {
-			debug('URL!' + request.url.toString());
+		chrome.devtools.network.onRequestFinished.addListener(function (e) {
 			urls.push({
-				url: request.url.toString(),
-				headersSize: request.headersSize.toString(),
-				bodySize: request.bodySize.toString()
+				url: e.request.url,
+				headersSize: e.response.headersSize,
+				bodySize: e.response.bodySize
 			});
 		});
 
 		window.backgroundPageConnection.onMessage.addListener(function (message) {
 			if (message.method === 'pageLoad') {
-				debug('page loaded ' + urls.length + ' resources');
-				debug(urls);
+				debug('page loaded ' + urls.length + ' resources', true);
+				try {
+					for (const r of urls) {
+						if (r.url.match(/^http/) && (new URL(r.url)).host !== (new URL(window.connectedPageUrl)).host) {
+							return reject(`3rd party url ${r.url} is not from ${(new URL(window.connectedPageUrl)).host}`, true);
+						}
+					}
+				} catch (e) {
+					debug(e);
+				}
 				resolve();
 			}
 		});

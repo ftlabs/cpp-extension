@@ -44,7 +44,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request.method === 'reloadMe') {
 			if (refreshTabCallbacks.has(tabId)) {
 				refreshTabCallbacks.get(tabId).postMessage({
-					method: 'reload'
+					method: 'reload',
+					url: sender.tab.url
 				});
 				refreshTabCallbacks.delete(tabId);
 			}
