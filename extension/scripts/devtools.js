@@ -3,8 +3,14 @@
 
 const runTests = require('./lib/tests');
 const debug = a => {
+	let stack;
+	if (a.constructor === Error) {
+		stack = a.stack.toString();
+	} else {
+		stack = Error('Stack').stack.toString().split('\n').map(s => s.trim()).slice(3,6).join('\n');
+	}
 	chrome.devtools.inspectedWindow.eval(
-		`console.log('CPP Extension: ${typeof a === 'string' ? a : JSON.stringify(a)}');`
+		'console.log(`%c CPP Extension: ' + (typeof a === 'string' ? a : JSON.stringify(a)) + '`, "font-weight:bold;"); console.log(`%c ' + stack + '`, "color:grey;");'
 	, {
 		useContentScriptContext: true
 	});
