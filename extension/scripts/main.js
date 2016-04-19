@@ -113,7 +113,7 @@ function loadWidget (promptRefresh) {
 	}
 }
 
-function beginTests() {
+function beginTests () {
 	console.log('Starting tests');
 }
 
