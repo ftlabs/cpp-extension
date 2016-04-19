@@ -65,11 +65,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			return;
 		}
 
-		if (request.method === 'resultsReady') {
-			emitMessage('resultsReady', request.results);
-			return;
-		}
-
 		if (request.method === 'trackUiInteraction') {
 			new Promise(
 				resolve => chrome.identity.getProfileUserInfo(resolve)
@@ -114,23 +109,22 @@ function devToolsListener (message, sender) {
 		console.log(message.log);
 	}
 
-	if (message.method === 'echo') {
-		sender.postMessage(message);
-	}
-
 	if (message.method === 'startTests') {
 		chrome.tabs.sendMessage(message.tabid, {
 			method: 'startTests'
 		});
 	}
 
-	// It is from devtools
 	if (message.method === 'waitForTabLoad') {
 		loadCallbacks.set(message.tabid, sender);
 	}
 
 	if (message.method === 'waitForReloadInteraction') {
 		refreshTabCallbacks.set(message.tabid, sender);
+	}
+
+	if (message.method === 'resultsReady') {
+		chrome.tabs.sendMessage(message.tabid, message);
 	}
 
 	if (message.method === 'devToolsRequestShowWidget') {

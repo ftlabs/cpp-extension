@@ -30,10 +30,15 @@ window.backgroundPageConnection = chrome.runtime.connect({
     name: 'devtools-page-' + Date.now()
 });
 
+
+window.loadPromise = new Promise(resolve => {
+	window.resolveLoadPromise = resolve;
+});
 window.backgroundPageConnection.onMessage.addListener(function (message) {
-	debug('Message from background tab to devtools: ' + JSON.stringify(message), true);
 
 	if (message.method === 'pageLoad') {
+
+		window.resolveLoadPromise();
 
 		// Trigger the client page to start it's testing
 		window.backgroundPageConnection.postMessage({
@@ -49,13 +54,6 @@ window.backgroundPageConnection.onMessage.addListener(function (message) {
 		debug('Reloading Page');
 		chrome.devtools.inspectedWindow.reload();
 		runTests()
-		.then(results => {
-			debug(results);
-			chrome.runtime.sendMessage({
-				method: 'resultsReady',
-				results: results
-			});
-		})
 		.catch(e => debug(e));
 	}
 });
