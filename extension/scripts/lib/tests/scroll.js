@@ -24,7 +24,6 @@ module.exports = function (){
 			} else {
 				resolve(true);
 			}
-			//resolve(thingsThatListenToScrollEvent);
 		}.bind(this), 1000);
 		
 	});

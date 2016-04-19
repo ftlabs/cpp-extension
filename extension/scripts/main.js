@@ -120,16 +120,16 @@ function loadWidget (promptRefresh) {
 function beginTests () {
 	console.log('Starting tests');
 	
-	return Promise.all(
+	Promise.all(
 		Object.keys(tests).map(
 			testName => tests[testName]()
 			.then(() => true)
 			.catch(e => {
-				debug(e);
 				return false;
 			})
 			.then(result => {
-				return [testName, result];
+				results[testName] = result;
+				widget.update();
 			})
 		)
 	);
@@ -150,14 +150,7 @@ chrome.runtime.onMessage.addListener(function (request) {
 
 	if (request.method === 'startTests') {
 		if (!widget) loadWidget();
-		beginTests()
-			.then(testResults => {
-				testResults.forEach(result => {
-					results[result[0]] = result[1]; 
-				});
-				widget.update();				
-			})
-		;
+		beginTests();
 	}
 
 	if (request.method === 'resultsReady') {
