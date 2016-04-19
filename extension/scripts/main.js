@@ -14,6 +14,10 @@ const STRINGS = {
 	]
 }
 
+const tests = {
+	scrollListeners : require('./lib/tests/scroll.js')
+}
+
 const results = {};
 Object.keys(STRINGS).forEach(key => results[key] = true);
 
@@ -115,6 +119,21 @@ function loadWidget (promptRefresh) {
 
 function beginTests () {
 	console.log('Starting tests');
+	
+	return Promise.all(
+		Object.keys(tests).map(
+			testName => tests[testName]()
+			.then(() => true)
+			.catch(e => {
+				debug(e);
+				return false;
+			})
+			.then(result => {
+				return [testName, result];
+			})
+		)
+	);
+	
 }
 
 let widget;
@@ -131,7 +150,14 @@ chrome.runtime.onMessage.addListener(function (request) {
 
 	if (request.method === 'startTests') {
 		if (!widget) loadWidget();
-		beginTests();
+		beginTests()
+			.then(testResults => {
+				testResults.forEach(result => {
+					results[result[0]] = result[1]; 
+				});
+				widget.update();				
+			})
+		;
 	}
 
 	if (request.method === 'resultsReady') {
