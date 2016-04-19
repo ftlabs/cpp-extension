@@ -135,17 +135,22 @@ chrome.runtime.onMessage.addListener(function (request) {
 	}
 
 	if (request.method === 'resultsReady') {
+		if (!widget) {
+			chrome.runtime.sendMessage({
+				method: 'isEnabled',
+				host: location.host
+			}, response => {
+				if (response.enabled) {
+					loadWidget();
+				}
+			});
+		} else {
 
-		chrome.runtime.sendMessage({
-			method: 'isEnabled',
-			host: location.host
-		}, response => {
-			if (!widget && response.enabled) loadWidget();
 			Object.keys(request.data).forEach(key => {
-				results[key] === request.data[key];
+				results[key] = request.data[key];
 			});
 			widget.update();
-		});
+		}
 	}
 });
 

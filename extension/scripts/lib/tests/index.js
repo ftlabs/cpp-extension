@@ -1,19 +1,32 @@
 'use strict';
-/* globals debug */
+/* globals debug, chrome */
 
-const tests = [
-	require('./blocking-3rd-party')
-];
+const tests = {
+	thirdParty: require('./blocking-3rd-party')
+};
+
+function reportTestToWidget (name, result) {
+	const resultObj = {};
+	resultObj[name] = result;
+	window.loadPromise.then(function () {
+		window.backgroundPageConnection.postMessage({
+			method: 'resultsReady',
+			tabid: chrome.devtools.inspectedWindow.tabId,
+			data: resultObj
+		});
+	});
+}
 
 module.exports = function runTests () {
 	return Promise.all(
-		tests.map(
-			test => test()
+		Object.keys(tests).map(
+			testName => tests[testName]()
 			.then(() => true)
 			.catch(e => {
 				debug(e);
 				return false;
 			})
+			.then(result => reportTestToWidget(testName, result))
 		)
 	);
 };
