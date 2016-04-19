@@ -1,5 +1,10 @@
-// This test runs on the client side.
-
+/**
+ * This runs on the client-side
+ *
+ * Counts the number of scroll events that are bound in the first second
+ * and then returns true if events have been bound or false if not.
+ *
+ */
 module.exports = function (){
 	
 	let thingsThatListenToScrollEvent = 0;
