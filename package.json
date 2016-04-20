@@ -24,8 +24,8 @@
     "origami-build-tools": "^5.1.0"
   },
   "devDependencies": {
-    "nodemon": "^1.8.1",
-    "rimraf": "^2.5.2"
+    "nodemon": "^1.9.1",
+    "uglifyjs": "^2.4.10"
   },
   "scripts": {
     "bower": "bower install",

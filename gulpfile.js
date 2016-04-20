@@ -29,7 +29,16 @@ gulp.task('build-extension-popup', ['copy-extension-files'], function () {
 	});
 });
 
-gulp.task('build-extension', ['build-extension-main', 'build-extension-background', 'build-extension-popup'], function () {
+gulp.task('build-extension-devtools', ['copy-extension-files'], function () {
+
+	return obt.build(gulp, {
+		js: './extension/scripts/devtools.js',
+		buildJs: 'devtools.js',
+		buildFolder: './extension-dist/scripts/'
+	});
+});
+
+gulp.task('build-extension', ['build-extension-main', 'build-extension-background', 'build-extension-popup', 'build-extension-devtools'], function () {
 
 	return gulp.src('./extension-dist/scripts/*.js')
 		.pipe(gulp.dest('./extension-dist/scripts/'))

@@ -3,6 +3,24 @@
 
 const oTracking = require('o-tracking');
 
+const STRINGS = {
+	thirdParty: [
+		'The page uses no 3rd party assets',
+		'The page uses some 3rd party assets, this may cause the page to load slowly due to the time it takes to handshake to the third party server.'
+	],
+	scrollListeners: [
+		'The page does not listen for scroll events',
+		'The page runs javascript triggered on scroll events, this can poor animation performance when the user scrolls due.'
+	]
+}
+
+const tests = {
+	scrollListeners : require('./lib/tests/scroll.js')
+}
+
+const results = {};
+Object.keys(STRINGS).forEach(key => results[key] = true);
+
 function logInteraction (e) {
 	const details = {};
 	const context = e.target.dataset.trackingAction;
@@ -32,7 +50,6 @@ function makeTrackingRequest (details, identity) {
 	trackingReq.id = identity.id;
 	trackingReq.email = identity.email;
 
-	// may not work without a DOM, may have to redirect to active tab.
 	oTracking.init({
 		server: 'https://spoor-api.ft.com/px.gif',
 		context: {
@@ -45,19 +62,39 @@ function makeTrackingRequest (details, identity) {
 	});
 }
 
-function loadWidget () {
+function loadWidget (promptRefresh) {
 
 	// add the widget stylesheet
 	require('./lib/widgetstyle');
+	console.log('Showing Widget');
 
 	const header = document.createElement('div');
 	const holder = document.createElement('div');
 	const close = document.createElement('span');
 	const textTarget = document.createElement('div');
 
-	function removeSelf (){
+	function removeSelf () {
 		widget = null;
 		holder.parentNode.removeChild(holder);
+	}
+
+	function update () {
+		if (!promptRefresh) {
+			let string = '<ul>';
+			Object.keys(STRINGS).forEach(key => {
+				string = string + `<li>${STRINGS[key][results[key] === false ? 1 : 0]}</li>`;
+			});
+			textTarget.innerHTML = string + '</ul>';
+		} else {
+			const refresh = document.createElement('button');
+			refresh.textContent = 'Begin tests (Reloads page)';
+			refresh.addEventListener('click', function refresh () {
+				chrome.runtime.sendMessage({
+					method: 'reloadMe'
+				});
+			});
+			textTarget.appendChild(refresh);
+		}
 	}
 
 	holder.appendChild(textTarget);
@@ -69,30 +106,78 @@ function loadWidget () {
 	close.dataset.trackingAction = 'close';
 	close.addEventListener('click', removeSelf, false);
 
-
 	holder.setAttribute('id', 'cpp-widget-holder');
 	document.body.appendChild(holder);
 
-	return {
+	update();
+
+	widget = {
 		close: removeSelf,
+		update
 	}
 }
 
-chrome.runtime.sendMessage({
-	method: 'isEnabled',
-	host: location.host
-}, response => {
-	if (response.enabled) loadWidget();
-});
+function beginTests () {
+	console.log('Starting tests');
+	
+	Promise.all(
+		Object.keys(tests).map(
+			testName => tests[testName]()
+			.then(() => true)
+			.catch(e => {
+				return false;
+			})
+			.then(result => {
+				results[testName] = result;
+				widget.update();
+			})
+		)
+	);
+	
+}
 
 let widget;
 chrome.runtime.onMessage.addListener(function (request) {
 
-	if (request.method === 'showWidget' && !widget) {
-		widget = loadWidget();
+	if (request.method === 'showWidget') {
+		if (request.promptRefresh && widget) widget.close();
+		if (!widget) loadWidget(request.promptRefresh);
 	}
 
 	if (request.method === 'makeTrackingRequest') {
 		makeTrackingRequest(request.data.details, request.data.identity);
 	}
+
+	if (request.method === 'startTests') {
+		if (!widget) loadWidget();
+		beginTests();
+	}
+
+	if (request.method === 'resultsReady') {
+		if (!widget) {
+			chrome.runtime.sendMessage({
+				method: 'isEnabled',
+				host: location.host
+			}, response => {
+				if (response.enabled) {
+					loadWidget();
+				}
+			});
+		} else {
+
+			Object.keys(request.data).forEach(key => {
+				results[key] = request.data[key];
+			});
+			widget.update();
+		}
+	}
+});
+
+
+// Always fire load event to background in case
+// the devtools are open and it is waiting
+window.addEventListener('load', function loaded () {
+	chrome.runtime.sendMessage({
+		method: 'hasLoaded'
+	});
 });
