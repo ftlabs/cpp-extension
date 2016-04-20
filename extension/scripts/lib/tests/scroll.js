@@ -21,13 +21,13 @@ module.exports = function (){
 
 	}
 	
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 
 		setTimeout(function (){
 			if(thingsThatListenToScrollEvent > 0){
-				resolve(false);
+				reject(`The scroll event is being listened for on this page by ${thingsThatListenToScrollEvent} event listeners`);
 			} else {
-				resolve(true);
+				resolve();
 			}
 		}.bind(this), 1000);
 		
