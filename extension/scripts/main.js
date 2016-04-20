@@ -14,6 +14,10 @@ const STRINGS = {
 	]
 }
 
+const tests = {
+	scrollListeners : require('./lib/tests/scroll.js')
+}
+
 const results = {};
 Object.keys(STRINGS).forEach(key => results[key] = true);
 
@@ -115,6 +119,21 @@ function loadWidget (promptRefresh) {
 
 function beginTests () {
 	console.log('Starting tests');
+	
+	Promise.all(
+		Object.keys(tests).map(
+			testName => tests[testName]()
+			.then(() => true)
+			.catch(e => {
+				return false;
+			})
+			.then(result => {
+				results[testName] = result;
+				widget.update();
+			})
+		)
+	);
+	
 }
 
 let widget;
