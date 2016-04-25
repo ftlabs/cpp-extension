@@ -11,11 +11,16 @@ const STRINGS = {
 	scrollListeners: [
 		'The page does not listen for scroll events',
 		'The page runs javascript triggered on scroll events, this can poor animation performance when the user scrolls due.'
+	],
+	sizeLimitedInLineScriptsAndStyles: [
+		'You have no large inline scritps or styles',
+		'You have some large inline scripts and styles which need to be parsed before the page can finish loading'
 	]
 }
 
 const tests = {
-	scrollListeners : require('./lib/tests/scroll.js')
+	scrollListeners : require('./lib/tests/scroll.js'),
+	sizeLimitedInLineScriptsAndStyles: require('./lib/tests/size-limited-inline-scripts-and-styles.js'),
 }
 
 const results = {};
@@ -119,7 +124,7 @@ function loadWidget (promptRefresh) {
 
 function beginTests () {
 	console.log('Starting tests');
-	
+
 	Promise.all(
 		Object.keys(tests).map(
 			testName => tests[testName]()
@@ -133,7 +138,7 @@ function beginTests () {
 			})
 		)
 	);
-	
+
 }
 
 let widget;
